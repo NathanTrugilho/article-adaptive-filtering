@@ -16,6 +16,34 @@ def print_metrics(y_true, y_pred, name):
     print(f"RMSE: {rmse:.4e}")
     print(f"MAE:  {mae:.4e}")
     print(f"R2:   {r2:.4f}")
+    
+    # Retornamos as métricas em um dicionário para poder salvar no TXT depois
+    return {"mse": mse, "rmse": rmse, "mae": mae, "r2": r2}
+
+def salvar_resultados(target_name, best_params, metrics, equation):
+    filename = f"resultado_{target_name}.txt"
+    with open(filename, 'w', encoding='utf-8') as f:
+        f.write(f"==================================================\n")
+        f.write(f" RESULTADOS DA OTIMIZACAO - ALVO: {target_name}\n")
+        f.write(f"==================================================\n\n")
+        
+        f.write("[1] MELHORES HIPERPARAMETROS (GRID SEARCH)\n")
+        f.write("--------------------------------------------------\n")
+        for param, value in best_params.items():
+            f.write(f"{param}: {value}\n")
+        
+        f.write("\n[2] METRICAS DE AVALIACAO (TEST SET)\n")
+        f.write("--------------------------------------------------\n")
+        f.write(f"MSE:  {metrics['mse']:.4e}\n")
+        f.write(f"RMSE: {metrics['rmse']:.4e}\n")
+        f.write(f"MAE:  {metrics['mae']:.4e}\n")
+        f.write(f"R2:   {metrics['r2']:.4f}\n")
+        
+        f.write("\n[3] MELHOR EQUACAO ENCONTRADA\n")
+        f.write("--------------------------------------------------\n")
+        f.write(f"{equation}\n")
+        
+    print(f"\n> Resultados salvos com sucesso no arquivo: '{filename}'")
 
 def RegressaoSimbolica(X, y, target_name):
     print(f"\n{'='*50}")
@@ -92,7 +120,7 @@ def RegressaoSimbolica(X, y, target_name):
     print("\n> Treinando o modelo final com os melhores parâmetros...")
     final_model = PySRRegressor(
         niterations=100,
-		populations=100,
+        populations=100,
         population_size=100,
         binary_operators=["+", "*", "-", "^"],
         unary_operators=["exp", "inv(x) = 1/x", "log10", "erf", "erfc"],
@@ -116,13 +144,21 @@ def RegressaoSimbolica(X, y, target_name):
     # Avaliação (Teste)
     # ======================
     y_test_pred = final_model.predict(X_test)
-    print_metrics(y_test, y_test_pred, f"Test Set - {target_name}")
+    
+    # Capturando as métricas retornadas
+    metrics = print_metrics(y_test, y_test_pred, f"Test Set - {target_name}")
 
     # ======================
     # Resultado final
     # ======================
+    best_equation = final_model.get_best().equation
     print(f"\n> Melhor Equação Encontrada para {target_name}:")
-    print(final_model.get_best().equation)
+    print(best_equation)
+    
+    # ======================
+    # Salvar em Arquivo TXT
+    # ======================
+    salvar_resultados(target_name, best_params, metrics, str(best_equation))
 
 
 if __name__ == '__main__':
@@ -142,8 +178,8 @@ if __name__ == '__main__':
 
     # Variáveis alvo
     y_mse = arr[:, 5]
-    y_msd = arr[:, 6]
-    y_pup = arr[:, 7]
+    #y_msd = arr[:, 6]
+    #y_pup = arr[:, 7]
 
     # Executa o pipeline completo para cada alvo
     RegressaoSimbolica(X, y_mse, target_name="MSE")
