@@ -61,8 +61,8 @@ def RegressaoSimbolica(X, y, target_name):
     # ======================
     # Usando configurações rápidas para o grid search
     base_model = PySRRegressor(
-        niterations=100,
-        populations=100,
+        niterations=10,
+        populations=10,
         population_size=200,
         binary_operators=["+", "*", "-", "^"],
         unary_operators=["exp", "inv(x) = 1/x", "log10", "erf", "erfc"],
@@ -81,7 +81,7 @@ def RegressaoSimbolica(X, y, target_name):
     # ======================
     param_grid = {
         # O quão forte o modelo penaliza equações muito longas/complexas
-        "parsimony": [0, 1e-4, 1e-3, 0.01],
+        "parsimony": [0, 1e-4, 1e-3],
 
         # Fator de temperatura (simulated annealing) ou probabilidade de aceitar equações piores
         "alpha": [3.17, 1, 5.0],
@@ -121,7 +121,7 @@ def RegressaoSimbolica(X, y, target_name):
     final_model = PySRRegressor(
         niterations=100,
         populations=100,
-        population_size=100,
+        population_size=200,
         binary_operators=["+", "*", "-", "^"],
         unary_operators=["exp", "inv(x) = 1/x", "log10", "erf", "erfc"],
         extra_sympy_mappings={"inv": lambda x: 1 / x},
