@@ -1,0 +1,21 @@
+==================================================
+ RESULTADOS DA OTIMIZACAO - ALVO: MSE
+==================================================
+
+[1] MELHORES HIPERPARAMETROS (GRID SEARCH)
+--------------------------------------------------
+alpha: 3.17
+ncycles_per_iteration: 380
+parsimony: 0.001
+topn: 24
+
+[2] METRICAS DE AVALIACAO (TEST SET)
+--------------------------------------------------
+MSE:  7.0132e-03
+RMSE: 8.3745e-02
+MAE:  6.4436e-02
+R2:   0.9845
+
+[3] MELHOR EQUACAO ENCONTRADA
+--------------------------------------------------
+exp(erfc(2.3589666 ^ x1)) ^ 9.342236
