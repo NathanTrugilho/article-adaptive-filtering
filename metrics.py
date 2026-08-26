@@ -2,7 +2,7 @@ import numpy as np
 import os
 import sys
 from pysr import PySRRegressor
-from sklearn.model_selection import GridSearchCV, KFold, train_test_split
+from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 
 
@@ -27,14 +27,14 @@ def print_metrics(y_true, y_pred, name):
 
 
 def save_results(target_name, best_params, metrics, equation, model_path):
-    filename = f"avaliacao_{target_name}.txt"
+    filename = f"evaluation_{target_name}.txt"
 
     with open(filename, 'w', encoding='utf-8') as f:
         f.write("==================================================\n")
         f.write(f" MODEL EVALUATION - TARGET: {target_name}\n")
         f.write("==================================================\n\n")
 
-        f.write("[1] MODEL\n")
+        f.write("[1] LOADED MODEL\n")
         f.write("--------------------------------------------------\n")
         f.write(f"Directory: {model_path}\n")
 
@@ -59,9 +59,9 @@ def save_results(target_name, best_params, metrics, equation, model_path):
     print(f"\n> Results successfully saved to: '{filename}'")
 
 
-def symbolic_regression(X, y, target_name):
+def evaluate_model(X, y, target_name, model_path):
     print(f"\n{'=' * 50}")
-    print(f" Starting Search for Target: {target_name}")
+    print(f" Evaluating saved model - Target: {target_name}")
     print(f"{'=' * 50}")
 
     # ======================
@@ -74,127 +74,65 @@ def symbolic_regression(X, y, target_name):
         random_state=28
     )
 
-    # ======================
-    # Base Model
-    # ======================
-    base_model = PySRRegressor(
-        niterations=20,
-        populations=10,
-        population_size=200,
-        binary_operators=["+", "*", "-", "^"],
-        unary_operators=["exp", "inv(x) = 1/x", "log10", "erf", "erfc"],
-        extra_sympy_mappings={"inv": lambda x: 1 / x},
-        nested_constraints={
-            "exp": {"exp": 0},
-            "log10": {"log10": 0},
-            "erf": {"erf": 0},
-            "erfc": {"erfc": 0}
-        },
-        constraints={"^": (-1, 1)},
-        model_selection="best",
-        progress=False,
-        verbosity=False,
-        annealing=True,
-        parallelism="multithreading"
-    )
+    print(f"> Training samples: {len(X_train)}")
+    print(f"> Test samples:     {len(X_test)}")
 
     # ======================
-    # Hyperparameter Grid
+    # Model Verification
     # ======================
-    param_grid = {
-        "parsimony": [1e-4, 1e-3, 1e-2],
-        "alpha": [2, 3, 4],
-        "ncycles_per_iteration": [150, 300, 450],
-        "topn": [12, 24, 36]
+    if not os.path.exists(model_path):
+        print(f"\nError: Model directory '{model_path}' was not found.")
+        sys.exit(1)
+
+    # ======================
+    # Load Model
+    # ======================
+    print(f"\n> Loading model from '{model_path}'...")
+
+    model = PySRRegressor.from_file(run_directory=model_path)
+
+    print("> Model loaded successfully.")
+
+    # ======================
+    # Grid Search Parameters
+    # ======================
+    model_params = model.get_params()
+
+    best_params = {
+        "parsimony": model_params["parsimony"],
+        "alpha": model_params["alpha"],
+        "ncycles_per_iteration": model_params["ncycles_per_iteration"],
+        "topn": model_params["topn"]
     }
 
-    # ======================
-    # Grid Search
-    # ======================
-    print(f"> Running Grid Search with K-Fold for {target_name}...")
+    print("\n> Grid Search parameters used:")
 
-    cv = KFold(
-        n_splits=5,
-        shuffle=True,
-        random_state=28
-    )
-
-    grid = GridSearchCV(
-        estimator=base_model,
-        param_grid=param_grid,
-        cv=cv,
-        verbose=1,
-        scoring="neg_mean_squared_error",
-        n_jobs=1
-    )
-
-    grid.fit(X_train, y_train)
-
-    best_params = grid.best_params_
-
-    print("\n> Best hyperparameters found:")
     for param, value in best_params.items():
         print(f"{param}: {value}")
 
     # ======================
-    # Final Model
+    # Best Equation
     # ======================
-    print("\n> Training final model with best hyperparameters...")
+    best_equation = model.get_best().equation
 
-    output_directory = f"best_model_{target_name}"
-
-    final_model = PySRRegressor(
-        niterations=10000,
-        populations=100,
-        population_size=200,
-        binary_operators=["+", "*", "-", "^"],
-        unary_operators=["exp", "inv(x) = 1/x", "log10", "erf", "erfc"],
-        extra_sympy_mappings={"inv": lambda x: 1 / x},
-        nested_constraints={
-            "exp": {"exp": 0},
-            "log10": {"log10": 0},
-            "erf": {"erf": 0},
-            "erfc": {"erfc": 0}
-        },
-        constraints={"^": (-1, 1)},
-        model_selection="best",
-        verbosity=True,
-        progress=False,
-        turbo=True,
-        annealing=True,
-        warm_start=True,
-        parallelism="multithreading",
-        output_directory=output_directory,
-        **best_params
-    )
-
-    final_model.fit(X_train, y_train)
+    print("\n> Loaded model equation:")
+    print(best_equation)
 
     # ======================
-    # Model Path
+    # Prediction
     # ======================
-    model_path = output_directory
+    print("\n> Running predictions on Test Set...")
 
-    print(f"\n> Model saved in: '{model_path}'")
+    y_test_pred = model.predict(X_test)
 
     # ======================
-    # Test Evaluation
+    # Evaluation
     # ======================
-    y_test_pred = final_model.predict(X_test)
-
     metrics = print_metrics(
         y_test,
         y_test_pred,
         f"Test Set - {target_name}"
     )
-
-    # ======================
-    # Best Equation
-    # ======================
-    best_equation = final_model.get_best().equation
-
-    print(f"\n> Best Equation Found for {target_name}:")
-    print(best_equation)
 
     # ======================
     # Save Results
@@ -211,15 +149,25 @@ def symbolic_regression(X, y, target_name):
 if __name__ == '__main__':
 
     # ======================
-    # Dataset
+    # Files
     # ======================
     file = './resultsSMNLMS.csv'
 
+    model_path = './best_model_MSE/20260826_110757_a3pBEd/'
+
+    target_name = "MSE"
+
+    # ======================
+    # Dataset Verification
+    # ======================
     if not os.path.exists(file):
         print(f"Error: File '{file}' was not found.")
         print("Run the 'gerar_dataset.py' script first.")
         sys.exit(1)
 
+    # ======================
+    # Load Dataset
+    # ======================
     print('>> Loading data...')
 
     arr = np.loadtxt(
@@ -232,30 +180,17 @@ if __name__ == '__main__':
     # tau, beta, N, sigmanu2, sigmax2
     X = arr[:, [0, 1, 2, 3, 4]]
 
-    # Target variables
+    # Target variable
     y_mse = arr[:, 5]
-    # y_msd = arr[:, 6]
-    # y_pup = arr[:, 7]
 
     # ======================
-    # Regression
+    # Model Evaluation
     # ======================
-    symbolic_regression(
+    evaluate_model(
         X,
         y_mse,
-        target_name="MSE"
+        target_name=target_name,
+        model_path=model_path
     )
 
-    # symbolic_regression(
-    #     X,
-    #     y_msd,
-    #     target_name="MSD"
-    # )
-
-    # symbolic_regression(
-    #     X,
-    #     y_pup,
-    #     target_name="Pup"
-    # )
-
-    print('\n>> ALL OPTIMIZATIONS FINISHED!')
+    print('\n>> EVALUATION FINISHED!')
