@@ -1,63 +1,79 @@
 import numpy as np
 import pandas as pd
 
-def evaluateEmpiricalQuantitiesSMNLMS(tauVector , betaVector , NVector , sigmanu2Vector , sigmax2Vector , numberOfIterations , numberOfLastIterations , numberOfRepeats):
-	
-	MSE = np.zeros((len(tauVector),len(betaVector),len(NVector),len(sigmanu2Vector),len(sigmax2Vector)))
-	MSD = np.zeros((len(tauVector),len(betaVector),len(NVector),len(sigmanu2Vector),len(sigmax2Vector)))
-	Pup = np.zeros((len(tauVector),len(betaVector),len(NVector),len(sigmanu2Vector),len(sigmax2Vector)))
+def evaluate_empirical_quantities_smnlms(tau_vector, beta_vector, n_vector, sigmanu2_vector, sigmax2_vector, number_of_iterations, number_of_last_iterations, number_of_repeats):
+    mse = np.zeros((len(tau_vector), len(beta_vector), len(n_vector), len(sigmanu2_vector), len(sigmax2_vector)))
+    msd = np.zeros((len(tau_vector), len(beta_vector), len(n_vector), len(sigmanu2_vector), len(sigmax2_vector)))
+    pup = np.zeros((len(tau_vector), len(beta_vector), len(n_vector), len(sigmanu2_vector), len(sigmax2_vector)))
 
-	for tauIndex in range(len(tauVector)):
-		for betaIndex in range(len(betaVector)):
-			for NIndex in range(len(NVector)):
-				for sigmanu2Index in range(len(sigmanu2Vector)):
-					for sigmax2Index in range(len(sigmax2Vector)):
-						print(str(tauIndex + 1) + '/' + str(len(tauVector)) + ' - ' + str(betaIndex + 1) + '/' + str(len(betaVector)) + ' - ' + str(NIndex + 1) + '/' + str(len(NVector)) + ' - ' + str(sigmanu2Index + 1) + '/' + str(len(sigmanu2Vector)) + ' - ' + str(sigmax2Index + 1) +  '/' + str(len(sigmax2Vector)))
-						tau = tauVector[tauIndex]
-						beta = betaVector[betaIndex]
-						N = NVector[NIndex]
-						sigmanu2 = sigmanu2Vector[sigmanu2Index]
-						sigmax2 = sigmax2Vector[sigmax2Index]
+    total_combinations = len(tau_vector) * len(beta_vector) * len(n_vector) * len(sigmanu2_vector) * len(sigmax2_vector)
+    combination_count = 0
 
-						for repeat in range(numberOfRepeats):
-							wk = np.zeros((N,1))
-							w0 = np.random.randn(N,1)
-							x  = np.sqrt(sigmax2) * np.random.randn( numberOfIterations + N - 1, 1 )
-							d  = np.convolve(w0[:,0], x[:,0])
-							d  += np.sqrt( sigmanu2 ) * np.random.randn(len(d))
-							gamma = np.sqrt(tau * sigmanu2)
+    for tau_index in range(len(tau_vector)):
+        for beta_index in range(len(beta_vector)):
+            for n_index in range(len(n_vector)):
+                for sigmanu2_index in range(len(sigmanu2_vector)):
+                    for sigmax2_index in range(len(sigmax2_vector)):
+                        combination_count += 1
+                        print(f"Combination {combination_count}/{total_combinations}")
 
-							for k in range(N, numberOfIterations + N - 1):
-								iteration = k - N + 1
-								xk = x[k:k-N:-1]
-								yk = np.dot(wk.T, xk)
-								ek = d[k] - yk
-								
-								if abs(ek) > gamma:
-									mu = 1 - gamma/abs(ek)
-									wk = wk + beta * mu / (np.dot(xk.T, xk)) * ek * xk
+                        tau = tau_vector[tau_index]
+                        beta = beta_vector[beta_index]
+                        n_filter = n_vector[n_index]
+                        sigmanu2 = sigmanu2_vector[sigmanu2_index]
+                        sigmax2 = sigmax2_vector[sigmax2_index]
 
-									if iteration > numberOfIterations - numberOfLastIterations + 1:
-										Pup[tauIndex , betaIndex , NIndex , sigmanu2Index , sigmax2Index] += 1 / (numberOfRepeats * numberOfLastIterations)
+                        for repeat in range(number_of_repeats):
+                            wk = np.zeros((n_filter, 1))
+                            w0 = np.random.randn(n_filter, 1)
+                            x = np.sqrt(sigmax2) * np.random.randn(number_of_iterations + n_filter - 1, 1)
+                            d = np.convolve(w0[:, 0], x[:, 0])
+                            d += np.sqrt(sigmanu2) * np.random.randn(len(d))
+                            gamma = np.sqrt(tau * sigmanu2)
 
-								if iteration > numberOfIterations - numberOfLastIterations + 1:
-									MSD[tauIndex , betaIndex , NIndex , sigmanu2Index , sigmax2Index] += np.linalg.norm(wk - w0) ** 2 / (numberOfRepeats * numberOfLastIterations)
-									MSE[tauIndex , betaIndex , NIndex , sigmanu2Index , sigmax2Index] += ek.item() ** 2 / (numberOfRepeats * numberOfLastIterations)
-	return MSE,MSD,Pup
+                            for k in range(n_filter, number_of_iterations + n_filter - 1):
+                                iteration = k - n_filter + 1
+                                xk = x[k:k - n_filter:-1]
+                                yk = np.dot(wk.T, xk)
+                                ek = d[k] - yk
+
+                                if abs(ek) > gamma:
+                                    mu = 1.0 - gamma / abs(ek)
+                                    wk = wk + (beta * mu / np.dot(xk.T, xk)) * ek * xk
+
+                                    if iteration > number_of_iterations - number_of_last_iterations:
+                                        pup[tau_index, beta_index, n_index, sigmanu2_index, sigmax2_index] += 1.0 / (number_of_repeats * number_of_last_iterations)
+
+                                if iteration > number_of_iterations - number_of_last_iterations:
+                                    norm_diff_squared = np.linalg.norm(wk - w0) ** 2
+                                    msd[tau_index, beta_index, n_index, sigmanu2_index, sigmax2_index] += norm_diff_squared / (number_of_repeats * number_of_last_iterations)
+                                    mse[tau_index, beta_index, n_index, sigmanu2_index, sigmax2_index] += (ek.item() ** 2) / (number_of_repeats * number_of_last_iterations)
+
+    return mse, msd, pup
 
 if __name__ == '__main__':
-    # Obs: Foram mantidas as últimas atribuições feitas no código original para os parâmetros
-    tauVector = np.arange(0, 2)
-    betaVector = np.arange(0.1, 1.1, 0.1)
-    NVector = [10]
-    sigmanu2Vector = np.power(10,np.arange(-6, -1), dtype=float)
-    sigmax2Vector = np.power(10,np.arange(1, 2), dtype=float)
-    numberOfIterations = 50
-    numberOfLastIterations = 1000
-    numberOfRepeats = 100
+    tau_vector = np.linspace(0.1, 2.5, 5)
+    beta_vector = np.linspace(0.1, 1.0, 10)
+    n_vector = [5, 10, 20]
+    sigmanu2_vector = np.power(10.0, np.arange(-5, 0, 1), dtype=float)
+    sigmax2_vector = np.power(10.0, np.arange(0, 3, 1), dtype=float)
 
-    print('>> Gerando dados SMNLMS...')
-    MSE,MSD,Pup = evaluateEmpiricalQuantitiesSMNLMS(tauVector,betaVector,NVector,sigmanu2Vector,sigmax2Vector,numberOfIterations,numberOfLastIterations,numberOfRepeats)
+    # Steady-state requires total iterations to exceed observation window
+    number_of_iterations = 1500
+    number_of_last_iterations = 300
+    number_of_repeats = 20
+
+    print("Generating SMNLMS dataset...")
+    mse, msd, pup = evaluate_empirical_quantities_smnlms(
+        tau_vector,
+        beta_vector,
+        n_vector,
+        sigmanu2_vector,
+        sigmax2_vector,
+        number_of_iterations,
+        number_of_last_iterations,
+        number_of_repeats
+    )
 
     data = {
         'tau': [],
@@ -67,26 +83,24 @@ if __name__ == '__main__':
         'sigmax2': [],
         'MSE': [],
         'MSD': [],
-        'Pup': [],
+        'Pup': []
     }
 
-    for tauIndex in range(len(tauVector)):
-            for betaIndex in range(len(betaVector)):
-                for NIndex in range(len(NVector)):
-                    for sigmanu2Index in range(len(sigmanu2Vector)):
-                        for sigmax2Index in range(len(sigmax2Vector)):
-                            data['tau'].append(tauVector[tauIndex])
-                            data['beta'].append(betaVector[betaIndex])
-                            data['N'].append(NVector[NIndex])
-                            data['sigmanu2'].append(sigmanu2Vector[sigmanu2Index])
-                            data['sigmax2'].append(sigmax2Vector[sigmax2Index])
-                            data['MSE'].append(MSE[tauIndex , betaIndex , NIndex , sigmanu2Index , sigmax2Index])
-                            data['MSD'].append(MSD[tauIndex , betaIndex , NIndex , sigmanu2Index , sigmax2Index])
-                            data['Pup'].append(Pup[tauIndex , betaIndex , NIndex , sigmanu2Index , sigmax2Index])
-                            
-    file = './resultsSMNLMS.csv'
+    for tau_index in range(len(tau_vector)):
+        for beta_index in range(len(beta_vector)):
+            for n_index in range(len(n_vector)):
+                for sigmanu2_index in range(len(sigmanu2_vector)):
+                    for sigmax2_index in range(len(sigmax2_vector)):
+                        data['tau'].append(tau_vector[tau_index])
+                        data['beta'].append(beta_vector[beta_index])
+                        data['N'].append(n_vector[n_index])
+                        data['sigmanu2'].append(sigmanu2_vector[sigmanu2_index])
+                        data['sigmax2'].append(sigmax2_vector[sigmax2_index])
+                        data['MSE'].append(mse[tau_index, beta_index, n_index, sigmanu2_index, sigmax2_index])
+                        data['MSD'].append(msd[tau_index, beta_index, n_index, sigmanu2_index, sigmax2_index])
+                        data['Pup'].append(pup[tau_index, beta_index, n_index, sigmanu2_index, sigmax2_index])
 
-    print('>> Gerando arquivo csv gerado SMNLMS')
+    output_path = './resultsSMNLMS.csv'
     df = pd.DataFrame(data)
-    df.to_csv(file, index=False, header=False)
-    print('>> FIM DA GERAÇÃO DE DADOS!')
+    df.to_csv(output_path, index=False)
+    print(f"Dataset generated with {len(df)} rows at {output_path}")
