@@ -38,8 +38,8 @@ def evaluate_empirical_quantities_smnlms(tau_vector, beta_vector, n_vector, sigm
                                 ek = d[k] - yk
 
                                 if abs(ek) > gamma:
-                                    mu = 1.0 - gamma / abs(ek)
-                                    wk = wk + (beta * mu / np.dot(xk.T, xk)) * ek * xk
+                                    #mu = 1.0 - gamma / abs(ek)
+                                    wk = wk + (beta / np.dot(xk.T, xk)) * ek * xk
 
                                     if iteration > number_of_iterations - number_of_last_iterations:
                                         pup[tau_index, beta_index, n_index, sigmanu2_index, sigmax2_index] += 1.0 / (number_of_repeats * number_of_last_iterations)
