@@ -1,0 +1,77 @@
+==================================================
+ LOADED MODEL EVALUATION - TARGET: MSE
+==================================================
+
+[1] LOADED MODEL
+--------------------------------------------------
+Directory: ./simple_model_MSE/run_MSE
+Split: train 70% | validation 10% | test 20%
+Selection Criterion: Lowest Validation MSE
+
+[2] MODEL HYPERPARAMETERS
+--------------------------------------------------
+niterations (per step):  10000
+warm_start:              True
+populations:             100
+population_size:         200
+parsimony:               0.001
+alpha:                   3
+ncycles_per_iteration:   300
+topn:                    24
+
+[3] EVALUATION METRICS (TRAIN SET)
+--------------------------------------------------
+MSE:  2.7867e-06
+RMSE: 1.6694e-03
+MAE:  6.7134e-04
+R2:   0.9993
+
+[4] EVALUATION METRICS (VALIDATION SET (SELECTION))
+--------------------------------------------------
+MSE:  2.7063e-06
+RMSE: 1.6451e-03
+MAE:  6.0734e-04
+R2:   0.9994
+
+[5] EVALUATION METRICS (TEST SET (EVALUATED WITH BEST VAL EQUATION))
+--------------------------------------------------
+MSE:  2.9366e-06
+RMSE: 1.7137e-03
+MAE:  6.1863e-04
+R2:   0.9992
+
+[6] SELECTED EQUATION (BY VALIDATION SET)
+--------------------------------------------------
+Hall of Fame Index: 24
+Complexity:         30
+Validation MSE:     2.7063e-06
+Equation:           ((sigmax2 - -7.835094) * (6.135994e-25 / (beta_ ^ N_))) + (sigmanu2 / (erfc((exp(inv(tau + N_)) * ((0.46288604 ^ N_) + (beta_ / 2.0836523))) ^ 1.0686452) / 1.0169775))
+
+[7] HALL OF FAME (PARETO FRONT WITH VALIDATION MSE)
+--------------------------------------------------
+    complexity      loss   val_mse         score                                                                                                                                                                 equation
+0            1  0.000834  0.001050  0.000000e+00                                                                                                                                                                 sigmanu2
+1            2  0.000599  0.000759  3.314329e-01                                                                                                                                                            erf(sigmanu2)
+2            3  0.000272  0.000313  7.896781e-01                                                                                                                                                    sigmanu2 / 0.65569586
+3            4  0.000223  0.000231  1.985642e-01                                                                                                                                                    sigmanu2 * exp(beta_)
+4            5  0.000021  0.000023  2.378473e+00                                                                                                                                          sigmanu2 / (0.47241694 ^ beta_)
+5            6  0.000017  0.000018  1.931537e-01                                                                                                                                       sigmanu2 / erfc(beta_ / 1.9041438)
+6            7  0.000017  0.000017  1.988116e-02                                                                                                                              sigmanu2 / (0.973775 - (beta_ / 1.9203299))
+7            8  0.000009  0.000010  6.330413e-01                                                                                                                               sigmanu2 * exp((N_ ^ -0.12666725) * beta_)
+8            9  0.000005  0.000006  5.999942e-01                                                                                                                          sigmanu2 / (erfc(inv(N_) + beta_) ^ 0.35980484)
+9           10  0.000004  0.000005  1.305390e-01                                                                                                                  sigmanu2 / erfc(beta_ / (2.0699222 - (0.8046352 ^ N_)))
+10          11  0.000004  0.000005  2.403803e-03                                                                                                               sigmanu2 / erfc(beta_ / (2.0643258 - erf(0.7881364 ^ N_)))
+11          12  0.000004  0.000003  8.125280e-02                                                                                                           sigmanu2 / erfc(beta_ / (2.1868472 - (2.740165 / (N_ + tau))))
+12          13  0.000004  0.000004  6.696430e-02                                                                                                      sigmanu2 / erfc(beta_ / (2.1964815 - (exp(0.88221204 ^ tau) / N_)))
+13          14  0.000004  0.000004  3.122861e-02                                                                                                 sigmanu2 / erfc((beta_ / erf(log10((N_ ^ 1.2877961) + tau))) / 2.092608)
+14          16  0.000003  0.000004  2.465346e-02                                                                                          sigmanu2 / (erfc((beta_ / 2.1516292) * exp(inv(tau + N_))) - (0.47431788 ^ N_))
+15          18  0.000003  0.000004  5.796334e-03                                                                           sigmanu2 / (erfc(((beta_ + (0.54075503 ^ N_)) * exp(inv(tau + N_))) / 1.8370008) ^ 0.82258683)
+16          19  0.000003  0.000004  3.730693e-06                                                                       sigmanu2 / (erfc(((beta_ + (erf(0.5231413) ^ N_)) / 1.8370008) * exp(inv(tau + N_))) ^ 0.82258683)
+17          20  0.000003  0.000003  2.586196e-02                                                             (sigmanu2 + (2.8083644e-23 / (beta_ ^ N_))) / erfc((beta_ / 2.0928266) / erf(log10((N_ ^ 1.2873833) + tau)))
+18          21  0.000003  0.000004  3.869337e-02                                                        (sigmax2 * (6.794885e-25 / (beta_ ^ N_))) + (sigmanu2 / erfc(beta_ / (2.1964815 - (exp(0.88221204 ^ tau) / N_))))
+19          22  0.000003  0.000003  3.615652e-02                                                   (sigmax2 * (6.794885e-25 / (beta_ ^ N_))) + (sigmanu2 / erfc((beta_ / 2.092889) / erf(log10(tau + (N_ ^ 1.2873832)))))
+20          23  0.000003  0.000003  3.960958e-07                                                (sigmax2 * (7.664092e-25 / erf(beta_ ^ N_))) + (sigmanu2 / erfc((beta_ / erf(log10(tau + (N_ ^ 1.2873832)))) / 2.092889))
+21          24  0.000003  0.000003  5.807524e-02                                            (sigmax2 * (6.794885e-25 / (beta_ ^ N_))) + (sigmanu2 / (erfc((exp(inv(tau + N_)) / 2.1516292) * beta_) - (0.47431788 ^ N_)))
+22          26  0.000003  0.000003  7.762121e-03                               (sigmanu2 / (erfc((((0.5406794 ^ N_) + beta_) * exp(inv(N_ + tau))) / 1.836951) ^ 0.82243705)) + ((sigmax2 * 6.794885e-25) / (beta_ ^ N_))
+23          28  0.000003  0.000003  4.031769e-03                (sigmanu2 / (erfc((((0.46288604 ^ N_) + (beta_ / 2.0836523)) * exp(inv(N_ + tau))) ^ 1.0686452) / 1.0169775)) + ((sigmax2 * 6.624358e-25) / (beta_ ^ N_))
+24          30  0.000003  0.000003  9.414486e-04  ((sigmax2 - -7.835094) * (6.135994e-25 / (beta_ ^ N_))) + (sigmanu2 / (erfc((exp(inv(tau + N_)) * ((0.46288604 ^ N_) + (beta_ / 2.0836523))) ^ 1.0686452) / 1.0169775))
